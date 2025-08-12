@@ -63,5 +63,14 @@ document.getElementById('formNovoEvento').addEventListener('submit', function(e)
     bootstrap.Modal.getInstance(document.getElementById('modalNovoEvento')).hide();
 });
 
+ document.addEventListener('DOMContentLoaded', function () {
+        const logoDiv = document.querySelector('.logo');
+        if (logoDiv) {
+            logoDiv.addEventListener('click', function () {
+                window.location.href = 'index.html';
+            });
+        }
+    });
+
 // Executa a função ao carregar a página
 document.addEventListener('DOMContentLoaded', renderizarEventos);

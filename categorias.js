@@ -142,6 +142,15 @@ function renderizarTopicos(curso, categoria) {
     }
 }
 
+ document.addEventListener('DOMContentLoaded', function () {
+        const logoDiv = document.querySelector('.logo');
+        if (logoDiv) {
+            logoDiv.addEventListener('click', function () {
+                window.location.href = 'index.html';
+            });
+        }
+    });
+
 // Lógica de navegação e renderização
 if (cursoSelecionado && categoriaSelecionada) {
     renderizarTopicos(categorias[cursoSelecionado], categoriaSelecionada);
