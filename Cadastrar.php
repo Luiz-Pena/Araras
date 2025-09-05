@@ -1,3 +1,31 @@
+<?php
+    include 'crud.php';
+    session_start();
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $email = htmlspecialchars($_POST['email']);
+        $senha = htmlspecialchars($_POST['senha']);
+
+        $stmt = $conn->prepare("SELECT * FROM usuarios WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $user = $result->fetch_assoc();
+            if (password_verify($senha, $user['senha'])) {
+                $_SESSION['user_id'] = $user['id'];
+                header("Location: index.php");
+                exit();
+            } else {
+                echo "<script>alert('Senha incorreta.');</script>";
+            }
+        } else {
+            echo "<script>alert('Usuário não encontrado.');</script>";
+        }
+    }
+?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -5,12 +33,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Tela de Cadastro</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script
-        src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js">
-    </script>
-
     <script 
-        src="Cadastrar.js">
+        src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js">
     </script>
 
     <style>
@@ -23,10 +47,12 @@
     <div class="container mt-5">
         <div class="row justify-content-center">
             <div class="col-md-6">
-                <div class="card shadow">
+                
+                <form class="card shadow">
                     <div class="card-header text-center">
                         <h3>Cadastro</h3>
                     </div>
+                    
                     <div class="card-body">
                         <form>
                             <div class="mb-3">
@@ -49,21 +75,10 @@
                     </div>
                 
                     <div class="card-footer text-center">
-                        <button type="submit" id="botaoCadastro" class="btn btn-primary">Cadastrar</button>
-
-                        <script>
-                            $(document).ready(function() {
-                                $('#botaoCadastro').click(function() {
-                                    if (validarFormulario()) {
-                                        alert('Cadastro realizado com sucesso!');
-                                    }
-                                });
-                            });
-                        </script>  
-
-                        <a href="Pagina de login.html" class="btn btn-secondary">Voltar</a>
+                        <button type="submit" id="botaoCadastro" class="btn btn-primary">Cadastrar</button> 
+                        <a href="Pagina de login.php" class="btn btn-secondary">Voltar</a>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>
