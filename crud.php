@@ -24,6 +24,15 @@
         descricao TEXT
     )");
 
+    $conn->query("CREATE TABLE IF NOT EXISTS eventos (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nome VARCHAR(100) NOT NULL UNIQUE,
+        descricao TEXT,
+        data_evento DATETIME NOT NULL,
+        local VARCHAR(255),
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+
     $conn->query("CREATE TABLE IF NOT EXISTS topicos (
         id INT AUTO_INCREMENT PRIMARY KEY,
         titulo VARCHAR(255) NOT NULL,

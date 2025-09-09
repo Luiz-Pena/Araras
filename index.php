@@ -23,15 +23,15 @@
                 <h1>Araras</h1>
             </div>
             <nav class="navegacao-principal d-flex">
-                <a href="index.html" class="nav-link">Início</a>
-                <a href="categorias.html" class="nav-link">Categorias</a>
+                <a href="index.php" class="nav-link">Início</a>
+                <a href="categorias.php" class="nav-link">Categorias</a>
                 <a href="regras.html" class="nav-link">Regras</a>
-                <a href="membros.html" class="nav-link">Membros</a>
-                <a href="eventos.html" class="nav-link active">Eventos</a>
+                <a href="membros.php" class="nav-link">Membros</a>
+                <a href="eventos.php" class="nav-link active">Eventos</a>
             </nav>
             <div class="cabecalho-acoes">
-                <a href="Pagina de login.html" class="botao botao-login me-2">Login</a>
-                <a href="Pagina de perfil.html" class="botao botao-registrar">Perfil</a>
+                <a href="Pagina de login.php" class="botao botao-login me-2">Login</a>
+                <a href="Pagina de perfil.php" class="botao botao-registrar">Perfil</a>
             </div>
         </div>
     </header>

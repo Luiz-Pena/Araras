@@ -50,12 +50,12 @@
             <div class="caixa-info">
                 <h4 class="caixa-info-titulo">Categorias</h4>
                 <ul class="caixa-info-lista">
-                    <li><a href="categorias.html?curso=Agronomia">Agronomia</a></li>
-                    <li><a href="categorias.html?curso=Engenharia%20de%20Agrimensura%20e%20Cartogr%C3%A1fica">Engenharia
+                    <li><a href="categorias.php?curso=Agronomia">Agronomia</a></li>
+                    <li><a href="categorias.php?curso=Engenharia%20de%20Agrimensura%20e%20Cartogr%C3%A1fica">Engenharia
                             de Agrimensura e Cartográfica</a></li>
-                    <li><a href="categorias.html?curso=Engenharia%20Florestal">Engenharia Florestal</a></li>
-                    <li><a href="categorias.html?curso=Geologia">Geologia</a></li>
-                    <li><a href="categorias.html?curso=Sistemas%20de%20Informa%C3%A7%C3%A3o">Sistemas de Informação</a>
+                    <li><a href="categorias.php?curso=Engenharia%20Florestal">Engenharia Florestal</a></li>
+                    <li><a href="categorias.php?curso=Geologia">Geologia</a></li>
+                    <li><a href="categorias.php?curso=Sistemas%20de%20Informa%C3%A7%C3%A3o">Sistemas de Informação</a>
                     </li>
                 </ul>
             </div>

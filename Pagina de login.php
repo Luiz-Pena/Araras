@@ -15,7 +15,7 @@
             $user = $result->fetch_assoc();
             if (password_verify($senha, $user['senha'])) {
                 $_SESSION['user_id'] = $user['id'];
-                header("Location: index.html");
+                header("Location: index.php");
                 exit();
             } else {
                 echo "<script>alert('Senha incorreta.');</script>";
@@ -52,7 +52,7 @@
         
             <form class="col d-flex flex-column justify-content-center align-items-center" method="post" action="">
                 <div class="meu-form-item px-1 mb-3"> 
-                    <a href="index.html" class="text-decoration-underline" style="font-size: 1.1rem;">Voltar</a> 
+                    <a href="index.php" class="text-decoration-underline" style="font-size: 1.1rem;">Voltar</a> 
                 </div>
 
                 <h1 class="mb-4" style="font-size: 2rem;">Login</h1> 
@@ -77,7 +77,7 @@
                 </div>
 
                 <div class="d-flex justify-content-between w-75 pt-2">
-                    <a href="Cadastrar.html" class="text-decoration-underline" style="font-size: 1.1rem;">Cadastrar</a> 
+                    <a href="Cadastrar.php" class="text-decoration-underline" style="font-size: 1.1rem;">Cadastrar</a> 
                     <a href="#" class="text-decoration-underline" style="font-size: 1.1rem;">Esqueci a Senha</a> 
                 </div>
             </form> 
