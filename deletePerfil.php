@@ -9,6 +9,12 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
+// Exclui respostas do usuário
+$stmt = $conn->prepare("DELETE FROM respostas WHERE user_id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$stmt->close();
+
 // Exclui tópicos do usuário
 $stmt = $conn->prepare("DELETE FROM topicos WHERE user_id = ?");
 $stmt->bind_param("i", $user_id);
@@ -29,6 +35,12 @@ $stmt->close();
 
 // Exclui perfil
 $stmt = $conn->prepare("DELETE FROM perfis WHERE user_id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$stmt->close();
+
+// Exclui usuário
+$stmt = $conn->prepare("DELETE FROM usuarios WHERE id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $stmt->close();
