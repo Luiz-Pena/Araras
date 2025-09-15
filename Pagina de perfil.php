@@ -122,24 +122,55 @@
             <?php echo nl2br(htmlspecialchars($bio ?? '')); ?>
             </h5>
         </div>
+
         <?php if (isset($_SESSION['user_id']) && $perfil_user_id == $_SESSION['user_id']): ?>
             <button class="btn btn-primary btn-lg w-100 mb-3" onclick="document.getElementById('editPerfilForm').style.display='block'">Editar Perfil</button>
-            <form id="editPerfilForm" action="editPerfil.php" method="POST" enctype="multipart/form-data" style="display:none;">
-                <div class="mb-2">
-                    <label for="nome" class="form-label">Nome</label>
-                    <input type="text" class="form-control" name="nome" id="nome" value="<?php echo htmlspecialchars($nome); ?>" required>
-                </div>
-                <div class="mb-2">
-                    <label for="avatar" class="form-label">Avatar (URL)</label>
-                    <input type="text" class="form-control" name="avatar" id="avatar" value="<?php echo htmlspecialchars($avatar); ?>">
-                </div>
-                <div class="mb-2">
-                    <label for="bio" class="form-label">Bio</label>
-                    <textarea class="form-control" name="bio" id="bio" rows="3"><?php echo htmlspecialchars($bio); ?></textarea>
-                </div>
-                <button type="submit" class="btn btn-success w-100">Salvar</button>
-                <button type="button" class="btn btn-secondary w-100 mt-2" onclick="document.getElementById('editPerfilForm').style.display='none'">Cancelar</button>
+                <form id="editPerfilForm" action="editPerfil.php" method="POST" enctype="multipart/form-data" style="display:none;">
+                    <div class="mb-2">
+                        <label for="nome" class="form-label">Nome</label>
+                        <input type="text" class="form-control" name="nome" id="nome" value="<?php echo htmlspecialchars($nome); ?>" required>
+                    </div>
+
+                    <div class="mb-2">
+                        <label for="avatar" class="form-label">Avatar (URL)</label>
+                        <input type="text" class="form-control" name="avatar" id="avatar" value="<?php echo htmlspecialchars($avatar); ?>">
+                    </div>
+
+                    <div class="mb-2">
+                        <label for="bio" class="form-label">Bio</label>
+                        <textarea class="form-control" name="bio" id="bio" rows="3"><?php echo htmlspecialchars($bio); ?></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100">Salvar</button>
+                    <button type="button" class="btn btn-secondary w-100 mt-2" onclick="document.getElementById('editPerfilForm').style.display='none'">Cancelar</button>
+                    <button type="submit" class="btn btn-danger w-100 mt-2" formaction="deletePerfil.php" onclick="return confirm('Tem certeza que deseja excluir seu perfil? Esta ação não pode ser desfeita.');">Excluir Perfil</button>
+                </form>
+
+        <?php elseif (isset($_SESSION['user_id']) && $perfil_user_id != $_SESSION['user_id']): ?>
+            <?php
+                // Verifica se já está seguindo
+                $ja_segue = false;
+                $check_stmt = $conn->prepare("SELECT 1 FROM seguir WHERE seguidor_id = ? AND seguindo_id = ?");
+                $check_stmt->bind_param("ii", $_SESSION['user_id'], $perfil_user_id);
+                $check_stmt->execute();
+                $check_stmt->store_result();
+        
+                if ($check_stmt->num_rows > 0) {
+                    $ja_segue = true;
+                }
+        
+                $check_stmt->close();
+            ?>
+    
+            <form action="seguir.php" method="POST">
+                <input type="hidden" name="seguindo_id" value="<?php echo $perfil_user_id; ?>">
+                <?php if ($ja_segue): ?>
+                    <button type="submit" class="btn btn-secondary btn-lg w-100 mb-3" name="acao" value="deixar_de_seguir">Deixar de Seguir</button>
+                <?php else: ?>
+                    <button type="submit" class="btn btn-success btn-lg w-100 mb-3" name="acao" value="seguir">Seguir</button>
+                <?php endif; ?>
             </form>
+            
         <?php endif; ?>
     </div>
     
@@ -183,20 +214,30 @@
                         <img class="imagem-flutuante" src="<?php echo htmlspecialchars($avatar); ?>">
                         <h2><?php echo htmlspecialchars($row['titulo']); ?></h2>
                     </div>
+                
                     <div>
                         <p class="p-2">
                             <?php echo nl2br(htmlspecialchars($row['conteudo'])); ?>
                         </p>
+
                         <?php if (!empty($row['midia'])): ?>
                             <img src="<?php echo htmlspecialchars($row['midia']); ?>" class="img-fluid">
                         <?php endif; ?>
                     </div>
+
                     <div class="d-flex justify-content-between w-75 p-2">
                         <a><?php echo $curtidas; ?> Curtidas</a>
                         <a><?php echo $comentarios; ?> Comentários</a>
                         <span class="text-muted"><?php echo date('d/m/Y H:i', strtotime($row['created_at'])); ?></span>
                     </div>
-                </div>
+    
+                    <?php if (isset($_SESSION['user_id']) && $perfil_user_id == $_SESSION['user_id']): ?>
+                        <form action="deleteTopico.php" method="POST" onsubmit="return confirm('Tem certeza que deseja apagar este tópico?');">
+                            <input type="hidden" name="topico_id" value="<?php echo $row['id']; ?>">
+                            <button type="submit" class="btn btn-danger mt-2">Apagar Tópico</button>
+                        </form>
+                    <?php endif; ?>
+                    </div>
                 <?php
             }
         }
