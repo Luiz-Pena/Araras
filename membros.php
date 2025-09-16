@@ -1,6 +1,34 @@
+<?php
+session_start();
+include 'crud.php';
+include 'ultimosEventos.php';
+include 'topicosRecentes.php';
+
+// Consulta SQL para buscar todos os membros e a contagem de tópicos
+// A consulta une as tabelas `perfis` e `topicos` para contar os posts de cada usuário
+$sql = "SELECT 
+            p.user_id, 
+            p.nome, 
+            p.avatar, 
+            p.created_at,
+            COUNT(t.id) AS contagem_topicos
+        FROM perfis p
+        LEFT JOIN topicos t ON p.user_id = t.user_id
+        GROUP BY p.user_id, p.nome, p.avatar, p.created_at
+        ORDER BY p.created_at DESC";
+        
+$result = $conn->query($sql);
+
+$membros = [];
+if ($result && $result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $membros[] = $row;
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,26 +43,10 @@
 </head>
 
 <body>
-
-    <header class="cabecalho-site">
-        <div class="container d-flex justify-content-between align-items-center">
-            <div class="logo d-flex align-items-center">
-                <img src="92020.png" alt="Logo de Arara" class="logo-imagem">
-                <h1>Araras</h1>
-            </div>
-            <nav class="navegacao-principal d-flex">
-                <a href="index.html" class="nav-link">Início</a>
-                <a href="categorias.html" class="nav-link">Categorias</a>
-                <a href="regras.html" class="nav-link">Regras</a>
-                <a href="membros.html" class="nav-link active">Membros</a>
-                <a href="eventos.html" class="nav-link active">Eventos</a>
-            </nav>
-            <div class="cabecalho-acoes">
-                <a href="Pagina de login.html" class="botao botao-login me-2">Login</a>
-                <a href="Pagina de perfil.html" class="botao botao-registrar">Perfil</a>
-            </div>
-        </div>
-    </header>
+    <?php
+        include 'cabeçalho.php';
+        renderHeader('eventos');
+    ?>
 
     <div class="container conteudo-pagina">
         <main class="conteudo-principal">
@@ -42,62 +54,40 @@
                 <h2>Membros do Fórum</h2>
             </div>
             <div class="lista-membros">
-                <div class="cartao-topico">
-                    <div class="topico-autor-avatar">
-                        <img src="ImagemTeste01.jpg" alt="Avatar do Ricardo" class="rounded-circle">
-                    </div>
-                    <div class="topico-detalhes">
-                        <h3 class="topico-titulo"><a href="#">Ricardo</a></h3>
-                        <div class="topico-info">
-                            <span>Membro desde: 10 de Agosto, 2025</span>
-                            <span class="topico-estatisticas">
-                                42 Tópicos
-                            </span>
+                <?php if (!empty($membros)): ?>
+                    <?php foreach ($membros as $membro): ?>
+                        <div class="cartao-topico">
+                            <div class="topico-autor-avatar">
+                                <a href="Pagina de perfil.php?id=<?= htmlspecialchars($membro['user_id']) ?>">
+                                    <img src="<?= htmlspecialchars($membro['avatar'] ?? 'avatar_padrao.jpg') ?>" alt="Avatar de <?= htmlspecialchars($membro['nome']) ?>" class="rounded-circle">
+                                </a>
+                            </div>
+                            <div class="topico-detalhes">
+                                <h3 class="topico-titulo">
+                                    <a href="Pagina de perfil.php?id=<?= htmlspecialchars($membro['user_id']) ?>">
+                                        <?= htmlspecialchars($membro['nome']) ?>
+                                    </a>
+                                </h3>
+                                <div class="topico-info">
+                                    <span>Membro desde: <?= date('d \d\e F, Y', strtotime($membro['created_at'])) ?></span>
+                                    <span class="topico-estatisticas">
+                                        <?= htmlspecialchars($membro['contagem_topicos']) ?> Tópicos
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <div class="cartao-topico">
-                    <div class="topico-autor-avatar">
-                        <img src="ImagemTeste02.jpg" alt="Avatar do Cleber" class="rounded-circle">
-                    </div>
-                    <div class="topico-detalhes">
-                        <h3 class="topico-titulo"><a href="#">Cleber</a></h3>
-                        <div class="topico-info">
-                            <span>Membro desde: 10 de Agosto, 2025</span>
-                            <span class="topico-estatisticas">
-                                21 Tópicos
-                            </span>
-                        </div>
-                    </div>
-                </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p>Nenhum membro encontrado.</p>
+                <?php endif; ?>
             </div>
         </main>
 
         <aside class="barra-lateral">
-            <div class="caixa-info">
-                <h4 class="caixa-info-titulo">Categorias</h4>
-                <ul class="caixa-info-lista">
-                    <li><a href="#">WEB <span class="contador">42</span></a></li>
-                    <li><a href="#">ED2<span class="contador">21</span></a></li>
-                    <li>
-                        <a href="#">POO <span class="contador">35</span></a>
-                    </li>
-                    <li><a href="#">Tópicos Gerais <span class="contador">18</span></a></li>
-                </ul>
-            </div>
-            <div class="caixa-info">
-                <h4 class="caixa-info-titulo">Eventos da Faculdade</h4>
-                <ul class="caixa-info-lista lista-eventos">
-                    <li>
-                        <strong>Vem pra ufu</strong>
-                        <span>12 a 16 de Julho</span>
-                    </li>
-                    <li>
-                        <strong>Palestra: IA no Mercado</strong>
-                        <span>28 de Setembro, 19:00</span>
-                    </li>
-                </ul>
-            </div>
+            <?php
+                renderEventosCaixa($conn);
+                renderizarCategorias($conn);
+            ?>
         </aside>
     </div>
 
@@ -128,17 +118,5 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
-
-    <script>
-         document.addEventListener('DOMContentLoaded', function () {
-        const logoDiv = document.querySelector('.logo');
-        if (logoDiv) {
-            logoDiv.addEventListener('click', function () {
-                window.location.href = 'index.html';
-            });
-        }
-    });</script>
-
 </body>
-
 </html>

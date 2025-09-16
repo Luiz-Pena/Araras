@@ -1,38 +1,43 @@
 <?php
-    session_start();
-    require_once 'crud.php'; // Certifique-se de que este arquivo conecta ao banco e define $conn
+include 'crud.php';
 
-    // Supondo que o usuário está logado e o id está na sessão
-    $user_id = $_SESSION['user_id'] ?? 1; // Troque para o método correto de autenticação
+session_start();
 
-    // Buscar dados do perfil
-    $stmt = $conn->prepare("SELECT p.nome, p.bio, p.avatar, p.created_at, p.user_id FROM perfis p WHERE p.user_id = ?");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $stmt->bind_result($nome, $bio, $avatar, $created_at, $perfil_user_id);
-    $stmt->fetch();
-    $stmt->close();
+$user_id = $_GET['id'] ?? $_SESSION['user_id'] ?? null;
+if (!$user_id) {
+    die("ID do perfil não especificado.");
+} 
 
-    // Buscar seguidores
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM seguir WHERE seguindo_id = ?");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $stmt->bind_result($seguidores);
-    $stmt->fetch();
-    $stmt->close();
+// Buscar dados do perfil principal (do usuário que está sendo visualizado)
+$stmt = $conn->prepare("SELECT p.nome, p.bio, p.avatar, p.created_at, p.user_id FROM perfis p WHERE p.user_id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$stmt->bind_result($nome, $bio, $avatar, $created_at, $perfil_user_id);
+$stmt->fetch();
+$stmt->close();
 
-    // Buscar seguindo
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM seguir WHERE seguidor_id = ?");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $stmt->bind_result($seguindo);
-    $stmt->fetch();
-    $stmt->close();
+// Buscar seguidores
+$stmt = $conn->prepare("SELECT COUNT(*) FROM seguir WHERE seguindo_id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$stmt->bind_result($seguidores);
+$stmt->fetch();
+$stmt->close();
 
-    // Avatar padrão se não houver
-    if (empty($avatar)) {
-        $avatar = "https://cdn-icons-png.flaticon.com/512/3736/3736502.png";
-    }
+// Buscar seguindo
+$stmt = $conn->prepare("SELECT COUNT(*) FROM seguir WHERE seguidor_id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$stmt->bind_result($seguindo);
+$stmt->fetch();
+$stmt->close();
+
+// Avatar padrão se não houver
+if (empty($avatar)) {
+    $avatar = "https://cdn-icons-png.flaticon.com/512/3736/3736502.png";
+}
+
+
 ?>
 
 <!DOCTYPE html>
@@ -104,6 +109,18 @@
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             margin-bottom: 20px;
         } 
+
+        .post-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .div-example .stretched-link {
+            text-decoration: none;
+            color: inherit;
+        }
     </style>
 
 </head>
@@ -173,78 +190,75 @@
             
         <?php endif; ?>
     </div>
-    
+
     <div class="main-content">
-        <h2 class="bg-primary text-white" style="border-radius: 5px; text-align: center;"> Publicações </h2>
+    <h2 class="bg-primary text-white" style="border-radius: 5px; text-align: center;"> Publicações </h2>
+    <?php
+    $stmt = $conn->prepare("SELECT t.id, t.titulo, t.conteudo, t.created_at, t.midia, p.avatar AS autor_avatar FROM topicos t LEFT JOIN perfis p ON t.user_id = p.user_id WHERE t.user_id = ? ORDER BY t.created_at DESC");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-        <?php
-        // Buscar tópicos do perfil visitado
-        $stmt = $conn->prepare("SELECT t.id, t.titulo, t.conteudo, t.created_at, t.midia FROM topicos t WHERE t.user_id = ? ORDER BY t.created_at DESC");
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
+    if ($result->num_rows === 0) {
+        echo '<div class="div-example p-5 mb-4 text-center"><h4>Este perfil ainda não publicou tópicos.</h4></div>';
+    } else {
+        while ($row = $result->fetch_assoc()) {
+            $curtidas = 0;
+            $comentarios = 0;
 
-        if ($result->num_rows === 0) {
-            echo '<div class="div-example p-5 mb-4 text-center"><h4>Este perfil ainda não publicou tópicos.</h4></div>';
-        } else {
-            while ($row = $result->fetch_assoc()) {
-                // Buscar número de curtidas (exemplo: tabela curtidas_topicos)
-                $curtidas = 0;
-                if ($curtidas_stmt = $conn->prepare("SELECT COUNT(*) FROM curtidas_topicos WHERE topico_id = ?")) {
-                    $curtidas_stmt->bind_param("i", $row['id']);
-                    $curtidas_stmt->execute();
-                    $curtidas_stmt->bind_result($curtidas);
-                    $curtidas_stmt->fetch();
-                    $curtidas_stmt->close();
-                }
-
-                // Buscar número de comentários (respostas)
-                $comentarios = 0;
-                if ($comentarios_stmt = $conn->prepare("SELECT COUNT(*) FROM respostas WHERE topico_id = ?")) {
-                    $comentarios_stmt->bind_param("i", $row['id']);
-                    $comentarios_stmt->execute();
-                    $comentarios_stmt->bind_result($comentarios);
-                    $comentarios_stmt->fetch();
-                    $comentarios_stmt->close();
-                }
-
-                ?>
-                <div class="div-example p-5 mb-4">
-                    <div class="profile-header">
-                        <img class="imagem-flutuante" src="<?php echo htmlspecialchars($avatar); ?>">
-                        <h2><?php echo htmlspecialchars($row['titulo']); ?></h2>
-                    </div>
-                
-                    <div>
-                        <p class="p-2">
-                            <?php echo nl2br(htmlspecialchars($row['conteudo'])); ?>
-                        </p>
-
-                        <?php if (!empty($row['midia'])): ?>
-                            <img src="<?php echo htmlspecialchars($row['midia']); ?>" class="img-fluid">
-                        <?php endif; ?>
-                    </div>
-
-                    <div class="d-flex justify-content-between w-75 p-2">
-                        <a><?php echo $curtidas; ?> Curtidas</a>
-                        <a><?php echo $comentarios; ?> Comentários</a>
-                        <span class="text-muted"><?php echo date('d/m/Y H:i', strtotime($row['created_at'])); ?></span>
-                    </div>
-    
-                    <?php if (isset($_SESSION['user_id']) && $perfil_user_id == $_SESSION['user_id']): ?>
-                        <form action="deleteTopico.php" method="POST" onsubmit="return confirm('Tem certeza que deseja apagar este tópico?');">
-                            <input type="hidden" name="topico_id" value="<?php echo $row['id']; ?>">
-                            <button type="submit" class="btn btn-danger mt-2">Apagar Tópico</button>
-                        </form>
-                    <?php endif; ?>
-                    </div>
-                <?php
+            if ($curtidas_stmt = $conn->prepare("SELECT COUNT(*) FROM curtidas_topicos WHERE topico_id = ?")) {
+                $curtidas_stmt->bind_param("i", $row['id']);
+                $curtidas_stmt->execute();
+                $curtidas_stmt->bind_result($curtidas);
+                $curtidas_stmt->fetch();
+                $curtidas_stmt->close();
             }
-        }
-        $stmt->close();
-        ?>
 
-        
-    </div>
+            if ($comentarios_stmt = $conn->prepare("SELECT COUNT(*) FROM respostas WHERE topico_id = ?")) {
+                $comentarios_stmt->bind_param("i", $row['id']);
+                $comentarios_stmt->execute();
+                $comentarios_stmt->bind_result($comentarios);
+                $comentarios_stmt->fetch();
+                $comentarios_stmt->close();
+            }
+            ?>
+            <div class="div-example p-5 mb-4 position-relative">
+                <a href="topico.php?id=<?= htmlspecialchars($row['id']) ?>" class="stretched-link"></a>
+                
+                <div class="profile-header">
+                    <img class="imagem-flutuante" src="<?= htmlspecialchars($avatar) ?>">
+                    <h2><?= htmlspecialchars($row['titulo']) ?></h2>
+                </div>
+
+                <div>
+                    <p class="p-2">
+                        <?= nl2br(htmlspecialchars($row['conteudo'])) ?>
+                    </p>
+
+                    <?php if (!empty($row['midia'])): ?>
+                        <img src="<?= htmlspecialchars($row['midia']) ?>" class="img-fluid">
+                    <?php endif; ?>
+                </div>
+
+                <div class="d-flex justify-content-between w-75 p-2">
+                    <a><?= $curtidas ?> Curtidas</a>
+                    <a><?= $comentarios ?> Comentários</a>
+                    <span class="text-muted"><?= date('d/m/Y H:i', strtotime($row['created_at'])) ?></span>
+                </div>
+                
+                <?php if (isset($_SESSION['user_id']) && $perfil_user_id == $_SESSION['user_id']): ?>
+                    <form action="deleteTopico.php" method="POST" onsubmit="return confirm('Tem certeza que deseja apagar este tópico?');">
+                        <input type="hidden" name="topico_id" value="<?= htmlspecialchars($row['id']) ?>">
+                        <button type="submit" class="btn btn-danger mt-2">Apagar Tópico</button>
+                    </form>
+                <?php endif; ?>
+            </div>
+            <?php
+        }
+    }
+    $stmt->close();
+    ?>
+</div>
+    
 </body>
 </html>

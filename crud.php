@@ -73,4 +73,14 @@
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES usuarios(id) ON DELETE CASCADE
     )");
+
+    $conn->query("CREATE TABLE IF NOT EXISTS curtidas_topicos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    topico_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (topico_id) REFERENCES topicos(id) ON DELETE CASCADE,
+    UNIQUE KEY (user_id, topico_id)
+)");
 ?>

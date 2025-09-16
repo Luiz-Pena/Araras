@@ -1,6 +1,51 @@
+<?php
+include 'crud.php';
+include 'topicosRecentes.php';
+session_start();
+
+// Buscar eventos
+$eventos = [];
+$sql = "SELECT id, nome, descricao, DATE_FORMAT(data_evento, '%d/%m/%Y %H:%i') as data_formatada, local FROM eventos ORDER BY data_evento DESC";
+$res = $conn->query($sql);
+if ($res && $res->num_rows > 0) {
+    while ($row = $res->fetch_assoc()) {
+        $eventos[] = $row;
+    }
+}
+
+// Criar novo evento
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tituloEvento'])) {
+    $nome = $conn->real_escape_string($_POST['tituloEvento']);
+    $descricao = $conn->real_escape_string($_POST['descricaoEvento']);
+    $data_input = $_POST['dataEvento'];
+    $local = $conn->real_escape_string($_POST['localEvento']);
+    
+    // Converte a data do formato "d/m/Y H:i" para um objeto DateTime
+    $data_evento_obj = DateTime::createFromFormat('d/m/Y H:i', $data_input);
+
+    // Verifica se a conversão foi bem-sucedida
+    if ($data_evento_obj) {
+        // Formata a data para o formato aceito pelo MySQL (YYYY-MM-DD HH:MM:SS)
+        $data_evento = $data_evento_obj->format('Y-m-d H:i:s');
+        
+        // Insere no banco de dados
+        $sql = "INSERT INTO eventos (nome, descricao, data_evento, local) VALUES ('$nome', '$descricao', '$data_evento', '$local')";
+        
+        if ($conn->query($sql)) {
+            header("Location: eventos.php");
+            exit;
+        } else {
+            echo "Erro na inserção: " . $conn->error;
+        }
+    } else {
+        // A data fornecida não está no formato esperado
+        echo "Erro: Formato de data e hora inválido. Use o formato 'dd/mm/aaaa hh:mm'.";
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,31 +56,18 @@
 
     <link rel="stylesheet" href="style.css">
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous">
+    </script>
+
     <link rel="icon" href="92020.png" type="image/png">
 </head>
-
 <body>
-    
-    <header class="cabecalho-site">
-        <div class="container d-flex justify-content-between align-items-center">
-            <div class="logo d-flex align-items-center">
-                <img src="92020.png" alt="Logo de Arara" class="logo-imagem">
-                <h1>Araras</h1>
-            </div>
-            <nav class="navegacao-principal d-flex">
-                <a href="index.php" class="nav-link">Início</a>
-                <a href="categorias.php" class="nav-link">Categorias</a>
-                <a href="regras.html" class="nav-link">Regras</a>
-                <a href="membros.php" class="nav-link">Membros</a>
-                <a href="eventos.php" class="nav-link active">Eventos</a>
-            </nav>
-            <div class="cabecalho-acoes">
-                <a href="Pagina de login.php" class="botao botao-login me-2">Login</a>
-                <a href="Pagina de perfil.php" class="botao botao-registrar">Perfil</a>
-            </div>
-        </div>
-    </header>
-
+    <?php
+        include 'cabeçalho.php';
+        renderHeader('eventos');
+    ?>
     <div class="container conteudo-pagina">
         <main class="conteudo-principal">
             <div class="topicos-cabecalho">
@@ -44,101 +76,75 @@
                     Criar Novo Evento
                 </button>
             </div>
-
             <div class="caixa-info">
                 <div class="lista-eventos" id="listaEventos">
+                    <?php if (count($eventos) > 0): ?>
+                        <ul class="list-group">
+                        <?php foreach ($eventos as $evento): ?>
+                            <li class="list-group-item">
+                                <strong><?= htmlspecialchars($evento['nome']) ?></strong>
+                                <span><?= htmlspecialchars($evento['data_formatada']) ?></span><br>
+                                <span><?= htmlspecialchars($evento['descricao']) ?></span>
+                                <?php if (!empty($evento['local'])): ?>
+                                    <br><small>Local: <?= htmlspecialchars($evento['local']) ?></small>
+                                <?php endif; ?>
+                            </li>
+                        <?php endforeach; ?>
+                        </ul>
+                    <?php else: ?>
+                        <p>Nenhum evento cadastrado.</p>
+                    <?php endif; ?>
                 </div>
             </div>
         </main>
-
         <aside class="barra-lateral">
-            <div class="caixa-info">
-                <h4 class="caixa-info-titulo">Categorias</h4>
-                <ul class="caixa-info-lista">
-                    <li><a href="categorias.html?curso=Agronomia">Agronomia</a></li>
-                    <li><a href="categorias.html?curso=Engenharia%20de%20Agrimensura%20e%20Cartogr%C3%A1fica">Engenharia
-                            de Agrimensura e Cartográfica</a></li>
-                    <li><a href="categorias.html?curso=Engenharia%20Florestal">Engenharia Florestal</a></li>
-                    <li><a href="categorias.html?curso=Geologia">Geologia</a></li>
-                    <li><a href="categorias.html?curso=Sistemas%20de%20Informa%C3%A7%C3%A3o">Sistemas de Informação</a>
-                    </li>
-                </ul>
-            </div>
-            <div class="caixa-info">
-                <h4 class="caixa-info-titulo">Eventos da Faculdade</h4>
-                <ul class="caixa-info-lista lista-eventos">
-                    <li>
-                        <strong>Vem pra ufu</strong>
-                        <span>12 a 16 de Julho</span>
-                    </li>
-                    <li>
-                        <strong>Palestra: IA no Mercado</strong>
-                        <span>28 de Setembro, 19:00</span>
-                    </li>
-                </ul>
-            </div>
+            
+            <?php
+                renderizarCategorias($conn);
+            ?>
+            
         </aside>
     </div>
 
     <div class="modal fade" id="modalNovoEvento" tabindex="-1" aria-labelledby="modalNovoEventoLabel"
-        aria-hidden="true">
-        <div class="modal-dialog">
-            <form class="modal-content" id="formNovoEvento">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalNovoEventoLabel">Criar Novo Evento</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <form class="modal-content" id="formNovoEvento" method="post" action="eventos.php">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalNovoEventoLabel">Criar Novo Evento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="tituloEvento" class="form-label">Título do Evento</label>
+                    <input type="text" class="form-control" id="tituloEvento" name="tituloEvento" required>
                 </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="tituloEvento" class="form-label">Título do Evento</label>
-                        <input type="text" class="form-control" id="tituloEvento" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="dataEvento" class="form-label">Data e Hora</label>
-                        <input type="text" class="form-control" id="dataEvento" placeholder="Ex: 28 de Setembro, 19:00"
-                            required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="descricaoEvento" class="form-label">Descrição</label>
-                        <textarea class="form-control" id="descricaoEvento" rows="3" required></textarea>
-                    </div>
+                <div class="mb-3">
+                    <label for="dataEvento" class="form-label">Data e Hora</label>
+                    <input type="text" class="form-control" id="dataEvento" name="dataEvento" placeholder="Ex: 28/09/2024 19:00" required>
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Publicar Evento</button>
+                <div class="mb-3">
+                    <label for="descricaoEvento" class="form-label">Descrição</label>
+                    <textarea class="form-control" id="descricaoEvento" name="descricaoEvento" rows="3" required></textarea>
                 </div>
-            </form>
-        </div>
+                <div class="mb-3">
+                    <label for="localEvento" class="form-label">Local do Evento</label>
+                    <input type="text" class="form-control" id="localEvento" name="localEvento">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Publicar Evento</button>
+            </div>
+        </form>
     </div>
+</div>
 
-    <div class="modal fade" id="modalLogin" tabindex="-1" aria-labelledby="modalLoginLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <form class="modal-content" id="formLogin">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalLoginLabel">Login</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="loginUsuario" class="form-label">Usuário</label>
-                        <input type="text" class="form-control" id="loginUsuario" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="loginSenha" class="form-label">Senha</label>
-                        <input type="password" class="form-control" id="loginSenha" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Entrar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-        crossorigin="anonymous"></script>
-
-    <script src="eventos.js" defer></script>
 </body>
-
 </html>
+
+        
+
+    
+
+
+            
