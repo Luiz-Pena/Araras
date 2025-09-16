@@ -121,6 +121,25 @@ if (empty($avatar)) {
             text-decoration: none;
             color: inherit;
         }
+
+        .delete-post-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10; /* Ensures it's on top of other content */
+            border: none;
+            background: transparent;
+            color: #dc3545; /* Red color */
+            font-weight: bold;
+            font-size: 1.25rem;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+        }
+
+        .delete-post-button:hover {
+            color: #b02a37; /* Darker red on hover */
+        }
     </style>
 
 </head>
@@ -223,10 +242,17 @@ if (empty($avatar)) {
             }
             ?>
             <div class="div-example p-5 mb-4 position-relative">
+                <?php if (isset($_SESSION['user_id']) && $perfil_user_id == $_SESSION['user_id']): ?>
+                    <form action="deleteTopico.php" method="POST" onsubmit="return confirm('Tem certeza que deseja apagar este tópico?');" class="position-absolute top-0 end-0">
+                        <input type="hidden" name="topico_id" value="<?= htmlspecialchars($row['id']) ?>">
+                        <button type="submit" class="btn delete-post-button">❌</button>
+                    </form>
+                <?php endif; ?>
+                
                 <a href="topico.php?id=<?= htmlspecialchars($row['id']) ?>" class="stretched-link"></a>
                 
                 <div class="profile-header">
-                    <img class="imagem-flutuante" src="<?= htmlspecialchars($avatar) ?>">
+                    <img class="post-avatar" src="<?= htmlspecialchars($row['autor_avatar'] ?? 'avatar_padrao.jpg') ?>">
                     <h2><?= htmlspecialchars($row['titulo']) ?></h2>
                 </div>
 
@@ -245,13 +271,6 @@ if (empty($avatar)) {
                     <a><?= $comentarios ?> Comentários</a>
                     <span class="text-muted"><?= date('d/m/Y H:i', strtotime($row['created_at'])) ?></span>
                 </div>
-                
-                <?php if (isset($_SESSION['user_id']) && $perfil_user_id == $_SESSION['user_id']): ?>
-                    <form action="deleteTopico.php" method="POST" onsubmit="return confirm('Tem certeza que deseja apagar este tópico?');">
-                        <input type="hidden" name="topico_id" value="<?= htmlspecialchars($row['id']) ?>">
-                        <button type="submit" class="btn btn-danger mt-2">Apagar Tópico</button>
-                    </form>
-                <?php endif; ?>
             </div>
             <?php
         }
