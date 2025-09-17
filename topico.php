@@ -81,6 +81,43 @@ $stmt->close();
         <div class="mt-5">
             <h3>Comentários (<?= count($comentarios) ?>)</h3>
             <hr>
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <?php
+    $curtidas = 0;
+    $stmt_curtidas = $conn->prepare("SELECT COUNT(*) FROM curtidas_topicos WHERE topico_id = ?");
+    $stmt_curtidas->bind_param("i", $topico_id);
+    $stmt_curtidas->execute();
+    $stmt_curtidas->bind_result($curtidas);
+    $stmt_curtidas->fetch();
+    $stmt_curtidas->close();
+    ?>
+    <span class="text-muted"><?= htmlspecialchars($curtidas) ?> Curtidas</span>
+
+    <?php if (isset($_SESSION['user_id'])): ?>
+        <?php
+        $ja_curtiu = false;
+        $stmt_check = $conn->prepare("SELECT 1 FROM curtidas_topicos WHERE user_id = ? AND topico_id = ?");
+        $stmt_check->bind_param("ii", $_SESSION['user_id'], $topico_id);
+        $stmt_check->execute();
+        $stmt_check->store_result();
+        if ($stmt_check->num_rows > 0) {
+            $ja_curtiu = true;
+        }
+        $stmt_check->close();
+        ?>
+        <form action="curtir_topico.php" method="post">
+            <input type="hidden" name="topico_id" value="<?= htmlspecialchars($topico_id) ?>">
+            <?php if ($ja_curtiu): ?>
+                <button type="submit" name="acao" value="descurtir" class="btn btn-danger">Descurtir</button>
+            <?php else: ?>
+                <button type="submit" name="acao" value="curtir" class="btn btn-primary">Curtir</button>
+            <?php endif; ?>
+        </form>
+    <?php endif; ?>
+</div>
+
+<hr>
             
             <?php if (!empty($comentarios)): ?>
                 <?php foreach ($comentarios as $comentario): ?>
